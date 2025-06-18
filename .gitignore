@@ -1,26 +1,23 @@
-# Build
+# Build e publicação
 bin/
 obj/
-*.exe
 *.dll
+*.exe
 *.pdb
+*.log
 
-# IDEs
+# Banco local e configs sensíveis
+*.db
+.env
+appsettings.json
+appsettings.Development.json
+
+# IDEs e editores
 .vscode/
 .idea/
 *.user
 *.suo
 
-# Logs
-*.log
-
-# Dados sensíveis
-.env
-.env.*
-
-# Banco local
-*.db
-
-# SOs
+# Sistema operacional
 .DS_Store
 Thumbs.db
