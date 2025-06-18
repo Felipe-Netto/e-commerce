@@ -4,8 +4,9 @@ using System.Text;
 using APIWithControllers.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using e_commerce.Models;
 
-namespace APIWithControllers.Services;
+namespace e_commerce.Services;
 
 public class AuthService
 {

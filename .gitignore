@@ -1,0 +1,26 @@
+# Build
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+
+# IDEs
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Logs
+*.log
+
+# Dados sensíveis
+.env
+.env.*
+
+# Banco local
+*.db
+
+# SOs
+.DS_Store
+Thumbs.db

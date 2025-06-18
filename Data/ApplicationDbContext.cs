@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using e_commerce.Models;
 
 namespace APIWithControllers.Data
 {

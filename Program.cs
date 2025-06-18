@@ -1,22 +1,21 @@
-namespace APIWithControllers;
 using Microsoft.EntityFrameworkCore;
 using APIWithControllers.Data;
 
-public class Program
-{
-    public static void Main(string[] args)
-    {
-        var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddControllers();
-        builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
-        var app = builder.Build();
+// Adiciona os serviços do controller
+builder.Services.AddControllers();
 
-        app.UseHttpsRedirection();
+// Configura o DbContext com PostgreSQL
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-        app.MapControllers();
+// Constrói o app
+var app = builder.Build();
 
-        app.Run();
-    }
-}
+// Middleware padrão
+app.UseHttpsRedirection();
+
+app.MapControllers();
+
+app.Run();

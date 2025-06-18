@@ -1,4 +1,4 @@
-namespace APIWithControllers.Data
+namespace e_commerce.Models
 {
     public class User
     {
