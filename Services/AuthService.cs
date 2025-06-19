@@ -1,10 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using APIWithControllers.Data;
+using e_commerce.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using e_commerce.Models;
+using e_commerce.Models.User;
+using BCryptNet =  BCrypt.Net.BCrypt;
 
 namespace e_commerce.Services;
 
@@ -19,59 +20,59 @@ public class AuthService
         _context = context;
     }
 
-    public string GenerateToken(User user)
+    public async Task<string?> RegisterAsync(UserRegisterDTO dto)
     {
-        var key = Encoding.ASCII.GetBytes(_configuration["Jwt:key"]!);
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var tokenDescriptor = new SecurityTokenDescriptor
+        if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+            return null;
+
+        var user = new User
         {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.Name, user.Name),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role)
-            }),
-            Expires = DateTime.UtcNow.AddMinutes(Convert.ToDouble(_configuration["Jwt:ExpiryInMinutes"])),
-            Issuer = _configuration["Jwt:Issuer"],
-            Audience = _configuration["Jwt:Audience"],
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature)
+            Name = dto.Name,
+            Email = dto.Email,
+            Password = BCryptNet.HashPassword(dto.Password),
+            Role = dto.Role,
+            Phone = dto.Phone,
         };
-
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
-    }
-
-    public async Task<User?> ValidateUser(string email, string password)
-    {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         
-        if (user == null)
-            return null;
-
-        // Aqui você deve implementar a verificação da senha
-        // Por enquanto, vamos apenas comparar as strings
-        // Em produção, você deve usar hash de senha
-        if (user.Password != password)
-            return null;
-
-        return user;
-    }
-
-    public async Task<(bool success, string token)> Login(string email, string password)
-    {
-        var user = await ValidateUser(email, password);
-        
-        if (user == null)
-            return (false, string.Empty);
-
-        var token = GenerateToken(user);
-        
-        // Atualiza o token no banco de dados
-        user.Token = token;
+        _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        return (true, token);
+        var token = GenerateToken(user);
+
+        return token;
+    }
+
+    public async Task<string?> LoginAsync(UserLoginDTO dto)
+    {
+        var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == dto.Email);
+        if (user == null || !BCryptNet.Verify(dto.Password, user.Password))
+            return null;
+
+        return GenerateToken(user);
+    }
+    
+    private string GenerateToken(User user)
+    {
+        var jwt    = _configuration.GetSection("Jwt");
+        var key    = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["key"]!));
+        var creds  = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var expiry = DateTime.UtcNow.AddMinutes(double.Parse(jwt["ExpiryInMinutes"]!));
+
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+            new Claim("id", user.Id.ToString()),
+            new Claim(ClaimTypes.Role, user.Role)
+        };
+
+        var token = new JwtSecurityToken(
+            issuer:             jwt["Issuer"],
+            audience:           jwt["Audience"],
+            claims:             claims,
+            expires:            expiry,
+            signingCredentials: creds
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

@@ -1,4 +1,4 @@
-namespace e_commerce.Models
+namespace e_commerce.Models.User
 {
     public class User
     {
@@ -8,6 +8,5 @@ namespace e_commerce.Models
         public required string Password { get; set; }
         public required string Role { get; set; }
         public required string Phone { get; set; }
-        public string? Token { get; set; }
     }
 }

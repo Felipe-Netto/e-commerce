@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using APIWithControllers.Data;
-using e_commerce.Models;
+using e_commerce.Data;
+using e_commerce.Models.User;
+using e_commerce.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace e_commerce.Controllers;
 
@@ -8,29 +10,32 @@ namespace e_commerce.Controllers;
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly AuthService _authService;
 
-    public UserController(ApplicationDbContext context)
+    public UserController(AuthService authService)
     {
-        _context = context;
+        _authService = authService;
     }
 
+    [AllowAnonymous]
     [HttpPost("register")]
-    public IActionResult Register([FromBody] User user)
+    public async Task<IActionResult> Register([FromBody] UserRegisterDTO dto)
     {
-        // Validação básica (você pode melhorar depois)
-        if (string.IsNullOrWhiteSpace(user.Email) || string.IsNullOrWhiteSpace(user.Password))
-            return BadRequest("Email e senha são obrigatórios.");
-
-        _context.Users.Add(user);
-        _context.SaveChanges();
-
-        return Ok(new { message = "Usuário registrado com sucesso", user.Id });
+        var token = await _authService.RegisterAsync(dto);
+        if (token == null)
+            return BadRequest("Email already exists");
+        
+        return Ok(new { token });
     }
 
-    [HttpGet("login")]
-    public IActionResult Login()
+    [AllowAnonymous]
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] UserLoginDTO dto)
     {
-        return Ok("login");
+        var token = await _authService.LoginAsync(dto);
+        if (token == null)
+            return Unauthorized(new { message = "Invalid Credentials" });
+        
+        return Ok(new { token });
     }
 }
