@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using e_commerce.Models;
+using e_commerce.Models.User;
+using e_commerce.Models.Product;
 
-namespace APIWithControllers.Data
+namespace e_commerce.Data
 {
     public class ApplicationDbContext : DbContext
     {
@@ -12,5 +13,6 @@ namespace APIWithControllers.Data
 
         // Aqui você pode adicionar suas entidades
         public DbSet<User> Users { get; set; }
+        public DbSet<Product> Products { get; set; }
     }
 }
